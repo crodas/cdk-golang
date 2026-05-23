@@ -1,0 +1,8 @@
+[package]
+name = "cdk_ffi"
+namespace = "cdk_ffi"
+
+[bindings.go]
+go_mod = "github.com/cashubtc/cdk-go"
+package_name = "cdkffi"
+c_module_filename = "cdk_ffi"
