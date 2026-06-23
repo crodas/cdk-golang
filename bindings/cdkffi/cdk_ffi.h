@@ -1768,6 +1768,11 @@ uint64_t uniffi_cdk_ffi_fn_method_wallet_refresh_keysets(uint64_t ptr
 uint64_t uniffi_cdk_ffi_fn_method_wallet_restore(uint64_t ptr
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_CDK_FFI_FN_METHOD_WALLET_RESTORE_WITH_OPTS
+#define UNIFFI_FFIDEF_UNIFFI_CDK_FFI_FN_METHOD_WALLET_RESTORE_WITH_OPTS
+uint64_t uniffi_cdk_ffi_fn_method_wallet_restore_with_opts(uint64_t ptr, RustBuffer opts
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_CDK_FFI_FN_METHOD_WALLET_REVERT_TRANSACTION
 #define UNIFFI_FFIDEF_UNIFFI_CDK_FFI_FN_METHOD_WALLET_REVERT_TRANSACTION
 uint64_t uniffi_cdk_ffi_fn_method_wallet_revert_transaction(uint64_t ptr, RustBuffer id
@@ -4015,6 +4020,12 @@ uint16_t uniffi_cdk_ffi_checksum_method_wallet_refresh_keysets(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_CDK_FFI_CHECKSUM_METHOD_WALLET_RESTORE
 #define UNIFFI_FFIDEF_UNIFFI_CDK_FFI_CHECKSUM_METHOD_WALLET_RESTORE
 uint16_t uniffi_cdk_ffi_checksum_method_wallet_restore(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_CDK_FFI_CHECKSUM_METHOD_WALLET_RESTORE_WITH_OPTS
+#define UNIFFI_FFIDEF_UNIFFI_CDK_FFI_CHECKSUM_METHOD_WALLET_RESTORE_WITH_OPTS
+uint16_t uniffi_cdk_ffi_checksum_method_wallet_restore_with_opts(void
     
 );
 #endif

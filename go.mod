@@ -1,3 +1,3 @@
-module github.com/crodas/cdk-golang/v101
+module github.com/crodas/cdk-golang
 
 go 1.22
