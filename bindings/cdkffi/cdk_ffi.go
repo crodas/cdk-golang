@@ -827,7 +827,7 @@ func uniffiCheckChecksums() {
 		checksum := rustCall(func(_uniffiStatus *C.RustCallStatus) C.uint16_t {
 			return C.uniffi_cdk_ffi_checksum_func_npubcash_derive_secret_key_from_seed()
 		})
-		if checksum != 22494 {
+		if checksum != 6473 {
 			// If this happens try cleaning and rebuilding your project
 			panic("cdk_ffi: uniffi_cdk_ffi_checksum_func_npubcash_derive_secret_key_from_seed: UniFFI API checksum mismatch")
 		}
@@ -1874,6 +1874,15 @@ func uniffiCheckChecksums() {
 		if checksum != 15985 {
 			// If this happens try cleaning and rebuilding your project
 			panic("cdk_ffi: uniffi_cdk_ffi_checksum_method_wallet_restore: UniFFI API checksum mismatch")
+		}
+	}
+	{
+		checksum := rustCall(func(_uniffiStatus *C.RustCallStatus) C.uint16_t {
+			return C.uniffi_cdk_ffi_checksum_method_wallet_restore_with_opts()
+		})
+		if checksum != 61743 {
+			// If this happens try cleaning and rebuilding your project
+			panic("cdk_ffi: uniffi_cdk_ffi_checksum_method_wallet_restore_with_opts: UniFFI API checksum mismatch")
 		}
 	}
 	{
@@ -5308,6 +5317,8 @@ type WalletInterface interface {
 	RefreshKeysets() ([]KeySetInfo, error)
 	// Restore wallet from seed
 	Restore() (Restored, error)
+	// Restore wallet from seed with custom NUT-13 options
+	RestoreWithOpts(opts Nut13Options) (Restored, error)
 	// Revert a transaction
 	RevertTransaction(id TransactionId) error
 	// Revoke a pending send operation
@@ -7094,6 +7105,42 @@ func (_self *Wallet) Restore() (Restored, error) {
 		},
 		C.uniffi_cdk_ffi_fn_method_wallet_restore(
 			_pointer),
+		// pollFn
+		func(handle C.uint64_t, continuation C.UniffiRustFutureContinuationCallback, data C.uint64_t) {
+			C.ffi_cdk_ffi_rust_future_poll_rust_buffer(handle, continuation, data)
+		},
+		// freeFn
+		func(handle C.uint64_t) {
+			C.ffi_cdk_ffi_rust_future_free_rust_buffer(handle)
+		},
+	)
+
+	if err == nil {
+		return res, nil
+	}
+
+	return res, err
+}
+
+// Restore wallet from seed with custom NUT-13 options
+func (_self *Wallet) RestoreWithOpts(opts Nut13Options) (Restored, error) {
+	_pointer := _self.ffiObject.incrementPointer("*Wallet")
+	defer _self.ffiObject.decrementPointer()
+	res, err := uniffiRustCallAsync[*FfiError](
+		FfiConverterFfiErrorINSTANCE,
+		// completeFn
+		func(handle C.uint64_t, status *C.RustCallStatus) RustBufferI {
+			res := C.ffi_cdk_ffi_rust_future_complete_rust_buffer(handle, status)
+			return GoRustBuffer{
+				inner: res,
+			}
+		},
+		// liftFn
+		func(ffi RustBufferI) Restored {
+			return FfiConverterRestoredINSTANCE.Lift(ffi)
+		},
+		C.uniffi_cdk_ffi_fn_method_wallet_restore_with_opts(
+			_pointer, FfiConverterNut13OptionsINSTANCE.Lower(opts)),
 		// pollFn
 		func(handle C.uint64_t, continuation C.UniffiRustFutureContinuationCallback, data C.uint64_t) {
 			C.ffi_cdk_ffi_rust_future_poll_rust_buffer(handle, continuation, data)
@@ -15743,19 +15790,13 @@ func (_ FfiDestroyerKeySetInfo) Destroy(value KeySetInfo) {
 	value.Destroy()
 }
 
-// FFI-compatible Keys (simplified - contains only essential info)
+// FFI-compatible Keys
 type Keys struct {
-	// Keyset ID
-	Id string
-	// Currency unit
-	Unit CurrencyUnit
-	// Map of amount to public key hex (simplified from BTreeMap)
+	// Map of amount to public key hex
 	Keys map[uint64]string
 }
 
 func (r *Keys) Destroy() {
-	FfiDestroyerString{}.Destroy(r.Id)
-	FfiDestroyerCurrencyUnit{}.Destroy(r.Unit)
 	FfiDestroyerMapUint64String{}.Destroy(r.Keys)
 }
 
@@ -15769,8 +15810,6 @@ func (c FfiConverterKeys) Lift(rb RustBufferI) Keys {
 
 func (c FfiConverterKeys) Read(reader io.Reader) Keys {
 	return Keys{
-		FfiConverterStringINSTANCE.Read(reader),
-		FfiConverterCurrencyUnitINSTANCE.Read(reader),
 		FfiConverterMapUint64StringINSTANCE.Read(reader),
 	}
 }
@@ -15784,8 +15823,6 @@ func (c FfiConverterKeys) LowerExternal(value Keys) ExternalCRustBuffer {
 }
 
 func (c FfiConverterKeys) Write(writer io.Writer, value Keys) {
-	FfiConverterStringINSTANCE.Write(writer, value.Id)
-	FfiConverterCurrencyUnitINSTANCE.Write(writer, value.Unit)
 	FfiConverterMapUint64StringINSTANCE.Write(writer, value.Keys)
 }
 
@@ -16936,6 +16973,53 @@ func (c FfiConverterMintVersion) Write(writer io.Writer, value MintVersion) {
 type FfiDestroyerMintVersion struct{}
 
 func (_ FfiDestroyerMintVersion) Destroy(value MintVersion) {
+	value.Destroy()
+}
+
+// FFI-compatible NUT-13 restore options
+type Nut13Options struct {
+	// Number of blinded messages to request per batch
+	BatchSize uint32
+	// Number of consecutive empty batches that terminate the scan
+	MaxGap uint32
+}
+
+func (r *Nut13Options) Destroy() {
+	FfiDestroyerUint32{}.Destroy(r.BatchSize)
+	FfiDestroyerUint32{}.Destroy(r.MaxGap)
+}
+
+type FfiConverterNut13Options struct{}
+
+var FfiConverterNut13OptionsINSTANCE = FfiConverterNut13Options{}
+
+func (c FfiConverterNut13Options) Lift(rb RustBufferI) Nut13Options {
+	return LiftFromRustBuffer[Nut13Options](c, rb)
+}
+
+func (c FfiConverterNut13Options) Read(reader io.Reader) Nut13Options {
+	return Nut13Options{
+		FfiConverterUint32INSTANCE.Read(reader),
+		FfiConverterUint32INSTANCE.Read(reader),
+	}
+}
+
+func (c FfiConverterNut13Options) Lower(value Nut13Options) C.RustBuffer {
+	return LowerIntoRustBuffer[Nut13Options](c, value)
+}
+
+func (c FfiConverterNut13Options) LowerExternal(value Nut13Options) ExternalCRustBuffer {
+	return RustBufferFromC(LowerIntoRustBuffer[Nut13Options](c, value))
+}
+
+func (c FfiConverterNut13Options) Write(writer io.Writer, value Nut13Options) {
+	FfiConverterUint32INSTANCE.Write(writer, value.BatchSize)
+	FfiConverterUint32INSTANCE.Write(writer, value.MaxGap)
+}
+
+type FfiDestroyerNut13Options struct{}
+
+func (_ FfiDestroyerNut13Options) Destroy(value Nut13Options) {
 	value.Destroy()
 }
 
@@ -23969,11 +24053,11 @@ func MnemonicToEntropy(mnemonic string) ([]byte, error) {
 // Derive Nostr keys from a wallet seed
 //
 // This function derives the same Nostr keys that a wallet would use for NpubCash
-// authentication. It takes the first 32 bytes of the seed as the secret key.
+// authentication, using the NIP-06 path `m/44'/1237'/0'/0/0`.
 //
 // # Arguments
 //
-// * `seed` - The wallet seed bytes (must be at least 32 bytes)
+// * `seed` - The wallet seed bytes (must be at least 64 bytes)
 //
 // # Returns
 //
